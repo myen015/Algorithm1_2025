@@ -16,7 +16,25 @@ int knapsack(int W, vector<int> &weights, vector<int> &values){
 	}
 	return dp[n][W];
 }
-
+/*
+why it's optimized
+1) Instead of 2D array we use 1D array
+2) We start indexing from right to left so we're sure that we made computation to each weight only 1 time
+*/
+int knapsack_optimized(int W, vector<int> &weights, vector<int> &values){
+	int n = weights.size();
+	vector<int> dp(W + 1,0);
+	for(int i = 0; i < n; i++){
+		for(int w = W; w >= weights[i]; w--){
+			dp[w] = max(dp[w], dp[w - weights[i]] + values[i]);
+		}
+	}
+	for(int i : dp){
+		cout << i << ' ';
+	}
+	cout << '\n';
+	return dp[W];
+}
 
 void solve() {
 	int n, W;
@@ -29,7 +47,7 @@ void solve() {
 	for(int i = 0; i < n; i++){
 		cin >> values[i];
 	}
-	cout << knapsack(W, weights, values);
+	cout << knapsack_optimized(W, weights, values);
 }
 
 
