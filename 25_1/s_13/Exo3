@@ -1,0 +1,56 @@
+#Problem 1:Fast Fibonacci
+def mat_mult(A, B):
+    return [
+        [A[0][0]*B[0][0] + A[0][1]*B[1][0],
+         A[0][0]*B[0][1] + A[0][1]*B[1][1]],
+        [A[1][0]*B[0][0] + A[1][1]*B[1][1],
+         A[1][0]*B[0][1] + A[1][1]*B[1][1]]
+def mat_pow(A, n):
+    if n == 0:
+        return [[1, 0], [0, 1]]  # identity matrix
+    if n % 2 == 1:return mat_mult(A, mat_pow(A, n - 1))
+    half = mat_pow(A, n // 2)
+    return mat_mult(half, half)
+def fibonacci(n):
+    A = [[1, 1], [1, 0]]
+    result = mat_pow(A, n)
+    return result[1][0]  # F(n)
+print("F(10) =", fibonacci(10))
+
+# Problem 2. 0/1 Knapsack algorithm
+def knapsack(weights, values, W):
+    n = len(values)
+    dp = [[0] * (W + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        for w in range(W + 1):
+            if weights[i - 1] <= w:
+                dp[i][w] = max(dp[i - 1][w],
+                               dp[i - 1][w - weights[i - 1]] + values[i - 1])
+            else:dp[i][w] = dp[i - 1][w]
+    return dp[n][W]
+# Example
+weights = [2, 3, 4, 5]
+values = [3, 4, 5, 6]
+W = 5
+print("Maximum value:", knapsack(weights, values, W))
+
+
+# Problem 3- Neuro Computing
+import numpy as np
+N = 10   # vector length
+num_vec = 5
+vectors = np.random.randint(0, 2, (num_vec, N))
+print("Random binary vectors:\n", vectors)
+def cosine_similarity(x, y):
+    return np.dot(x, y) / (np.sum(x) * np.sum(y)) if np.sum(x)*np.sum(y) != 0 else 0
+
+def jaccard_similarity(x, y):
+    intersection = np.sum(np.logical_and(x, y))
+    union = np.sum(np.logical_or(x, y))
+    return intersection / union if union != 0 else 0
+
+for i in range(num_vec):
+    for j in range(i + 1, num_vec):
+        cos = cosine_similarity(vectors[i], vectors[j])
+        jacc = jaccard_similarity(vectors[i], vectors[j])
+        print(f"Vectors {i} & {j} -> Cosine: {cos:.3f}, Jaccard: {jacc:.3f}")
