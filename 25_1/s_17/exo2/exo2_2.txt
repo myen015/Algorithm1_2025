@@ -1,0 +1,102 @@
+void merge(vector<int> &v, int l, int m, int r, vector<int> &tmp){
+	int i = l;
+	int j = m + 1;
+	int k = l;
+	if(v[m] <= v[m + 1]){
+		return;
+	}
+	while(i <= m && j <= r){
+		if(v[i] <= v[j]){
+			tmp[k] = v[i];
+			i++;
+		}
+		else{
+			tmp[k] = v[j];
+			j++;
+		}
+		k++;
+	}
+	while(i <= m){
+		tmp[k] = v[i];
+		i++;
+		k++;
+	}
+	while(j <= r){
+		tmp[k] = v[j];
+		j++;
+		k++;
+	}
+	for(int t = l; t <= r; t++){
+		v[t] = tmp[t]; 
+	}
+}
+
+void mergeSort(vector<int> &v, int l, int r, vector<int> &tmp){
+	if(l >= r){
+		return;
+	}
+	int m = l + (r - l) / 2;
+	mergeSort(v, l, m, tmp);
+	mergeSort(v, m + 1, r, tmp);
+	merge(v, l, m, r, tmp);
+}
+
+
+mergeSort(v, l, m, tmp);
+mergeSort(v, m + 1, r, tmp);
+
+2 subtasks so a = 2
+
+
+	
+int m = l + (r - l) / 2;
+left = [l, m]
+right = [m + 1, r]
+
+we divide array to 2 so b = 2
+
+
+while(i <= m && j <= r){
+		if(v[i] <= v[j]){
+			tmp[k] = v[i];
+			i++;
+		}
+		else{
+			tmp[k] = v[j];
+			j++;
+		}
+		k++;
+	}
+	while(i <= m){
+		tmp[k] = v[i];
+		i++;
+		k++;
+	}
+	while(j <= r){
+		tmp[k] = v[j];
+		j++;
+		k++;
+	}
+
+first while O(r - l + 1) = O(n)
+other 2 whiles O(n)
+for O(n)
+So f(n) = O(n)
+
+
+T(n) = aT(n/b) + f(n)
+
+log2(2) = 1
+n^log2(2) = n^1 = n
+
+f(n) = O(n)
+ 
+k >= 0
+
+f(n) = Θ(n) = Θ(n^1 · log^0(n))
+n^(log_b(a)) = n^1
+
+T(n) = Θ(n^(log_b(a)) · log^(k+1)(n))
+     = Θ(n^1 · log^(0+1)(n))
+     = Θ(n · log n)
+     = Θ(n log n)
