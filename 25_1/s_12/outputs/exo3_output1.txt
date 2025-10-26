@@ -1,0 +1,5 @@
+C:\Users\Akan\.jdks\corretto-21.0.8\bin\java.exe "-javaagent:C:\Users\Akan\AppData\Local\Programs\IntelliJ IDEA Ultimate\lib\idea_rt.jar=57256" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -classpath C:\Users\Akan\Desktop\Akan\IdeaProjects\Algorithms2025\out\production\Algorithms2025 Ex3
+Best value (course example) = 10
+Large test: value=37288, time=31 ms, memory=O(W)=5001 ints
+
+Process finished with exit code 0
