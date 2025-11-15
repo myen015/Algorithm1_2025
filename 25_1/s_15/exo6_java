@@ -1,0 +1,118 @@
+public class exo6{
+
+    static class Node{
+        double weight;
+        java.util.ArrayList<Node> children=new java.util.ArrayList<>();
+
+        Node(double w){
+            this.weight=w;
+        }
+
+        boolean isLeaf(){
+            return children.isEmpty();
+        }
+    }
+
+    static Node buildTree(int k,int maxDepth){
+        Node root=new Node(1.0);
+        grow(root,k,0,maxDepth);
+        return root;
+    }
+
+    static void grow(Node node,int k,int depth,int maxDepth){
+        if(depth==maxDepth)return;
+        double childWeight=node.weight/k;
+        for(int i=0;i<k;i++){
+            Node child=new Node(childWeight);
+            node.children.add(child);
+            grow(child,k,depth+1,maxDepth);
+        }
+    }
+
+    //DFS-sum
+    static double dfsSum(Node node){
+        if(node==null)return 0.0;
+        if(node.isLeaf())return node.weight;
+        double sum=0.0;
+        for(Node c:node.children){
+            sum+=dfsSum(c);
+        }
+        return sum;
+    }
+
+    //BFS-sum
+    static double bfsSum(Node root){
+        if(root==null)return 0.0;
+        double sum=0.0;
+        java.util.Queue<Node> q=new java.util.ArrayDeque<>();
+        q.add(root);
+        while(!q.isEmpty()){
+            Node cur=q.poll();
+            if(cur.isLeaf())sum+=cur.weight;
+            q.addAll(cur.children);
+        }
+        return sum;
+    }
+
+    //DFS flip
+    static double dfsFlipAndSum(Node node){
+        if(node==null)return 0.0;
+        double sum=0.0;
+        if(node.isLeaf())sum+=node.weight;
+        node.weight=-node.weight;
+        for(Node c:node.children){
+            sum+=dfsFlipAndSum(c);
+        }
+        return sum;
+    }
+
+    //BFS flip
+    static double bfsFlipAndSum(Node root){
+        if(root==null)return 0.0;
+        double sum=0.0;
+        java.util.Queue<Node> q=new java.util.ArrayDeque<>();
+        q.add(root);
+        while(!q.isEmpty()){
+            Node cur=q.poll();
+            if(cur.isLeaf())sum+=cur.weight;
+            cur.weight=-cur.weight;
+            q.addAll(cur.children);
+        }
+        return sum;
+    }
+
+    //BFS recursive
+    static double bfsSumRecursive(Node root){
+        if(root==null)return 0.0;
+        java.util.Queue<Node> q=new java.util.ArrayDeque<>();
+        q.add(root);
+        return bfsLevel(q);
+    }
+
+    static double bfsLevel(java.util.Queue<Node> q){
+        if(q.isEmpty())return 0.0;
+        int size=q.size();
+        double levelSum=0.0;
+        for(int i=0;i<size;i++){
+            Node cur=q.poll();
+            if(cur.isLeaf())levelSum+=cur.weight;
+            q.addAll(cur.children);
+        }
+        return levelSum+bfsLevel(q);
+    }
+
+    public static void main(String[] args){
+        int k=3;
+        int depth=3;
+        Node root=buildTree(k,depth);
+        System.out.println("DFS leaf sum: "+dfsSum(root));
+        System.out.println("BFS leaf sum: "+bfsSum(root));
+        System.out.println("DFS flip 1: "+dfsFlipAndSum(root));
+        System.out.println("DFS flip 2: "+dfsFlipAndSum(root));
+        Node root2=buildTree(k,depth);
+        System.out.println("BFS flip 1: "+bfsFlipAndSum(root2));
+        System.out.println("BFS flip 2: "+bfsFlipAndSum(root2));
+        Node root3=buildTree(k,depth);
+        System.out.println("BFS recursive leaf sum: "+bfsSumRecursive(root3));
+    }
+}
