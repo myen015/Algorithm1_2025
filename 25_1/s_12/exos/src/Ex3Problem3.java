@@ -1,6 +1,7 @@
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.util.Random;
 
 /**
  * Problem 3 (Neuro Computing)
@@ -11,7 +12,7 @@ import java.math.MathContext;
  * 3) Show that for larger N the similarities concentrate (CLT → “Gaussian-like” histograms).
  * 4) For sparse vectors (N=2000, w=5) print C(2000,5).
  * 5) Brief note about a notion of “capacity”.
- *
+ * <p>
  * Notes:
  * - For Bernoulli(p), intersection |x∩y| ~ Binomial(N, p^2), while ||x||_1 ~ Binomial(N, p).
  *   After normalization (division by ~pN and ~pN), sim_L1 ≈ (Bin(N, p^2)) / (p^2 N) fluctuates
@@ -28,7 +29,7 @@ public class Ex3Problem3 {
         long seed = 42L;
 
         runExperiment(N, M, p, seed, 20);
-        runExperiment(1000, M, p, seed, 20);
+        runExperiment(1000, M, p, seed, 40);
         sparseCountN2000w5();
     }
 
@@ -36,7 +37,7 @@ public class Ex3Problem3 {
 
     static void runExperiment(int N, int M, double p, long seed, int bins) {
         System.out.printf("\n=== Experiment: N=%d, M=%d, p=%.2f ===\n", N, M, p);
-        int[][] X = Utilities.randomBinaryMatrix(M, N, p, seed);
+        int[][] X = randomBinaryMatrix(M, N, p, seed);
 
         int pairs = M * (M - 1) / 2;
         double[] simL1 = new double[pairs];
@@ -56,6 +57,19 @@ public class Ex3Problem3 {
 
         Utilities.printStats("Jaccard", jacc);
         Utilities.printHistogram(jacc, bins);
+    }
+
+    // ---------------------- Data generation ----------------------
+
+    static int[][] randomBinaryMatrix(int m, int n, double p, long seed) {
+        Random rnd = new Random(seed);
+        int[][] A = new int[m][n];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                A[i][j] = rnd.nextDouble() < p ? 1 : 0;
+            }
+        }
+        return A;
     }
 
     // ---------------------- Similarities ----------------------
