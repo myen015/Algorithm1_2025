@@ -1,0 +1,62 @@
+=
+Problem 1 (SCC and Graph Reversal)
+To reverse a directed graph G in O(V+E), iterate over all edges and add each reversed edge to a new adjacency list. 
+The strong component graph scc(G) is acyclic because any cycle among components would imply vertices belong to the same component, 
+which is a contradiction. For all vertices u and v, u can reach v in G if and only if S(u) can reach S(v) in scc(G). 
+Reversing G preserves strong components, and edges in scc(G) are reversed in scc(rev(G)), so scc(rev(G)) = rev(scc(G)).
+
+Problem 2 (Euler Tour)
+A strongly connected directed graph has an Euler tour if and only if in-degree equals out-degree for each vertex. 
+This is because each visit along a cycle must enter and leave vertices the same number of times. 
+The Euler tour can be constructed in O(E) time using Hierholzer's algorithm: build cycles along unused edges and merge them iteratively until all edges are used.
+
+Problem 3 (Topological Sort)
+Given a DAG, topological sort orders vertices respecting edge directions. Starting from A in the course graph example, one valid order is A, B, C, D, G, E, F. 
+Starting from G or with different tie-breaking, other valid orders include G, A, B, C, D, E, F or A, B, D, C, G, E, F. 
+The topological sort can be implemented using Kahn’s algorithm with a priority choice for vertices with zero in-degree.
+
+
+Output
+Adjacency:
+A: B C
+B: C D
+C: E
+D: E F
+E:
+F:
+G: F E
+Reversed adjacency:
+A:
+B: A
+C: A B
+D: B
+E: C D G
+F: D G
+G:
+Component ids (Kosaraju):
+A -> C1
+B -> C2
+C -> C5
+D -> C3
+E -> C6
+F -> C4
+G -> C0
+Condensation graph adjacency (components):
+C0: C6 C4
+C1: C5 C2
+C2: C3 C5
+C3: C4 C6
+C4:
+C5: C6
+C6:
+Topological order (prefer A): A B C D G E F
+Topological order (prefer G): G A B C D E F
+Topological order (smallest-first tie-break): A B C D G E F
+
+=== Demo: Euler tour ===
+Adjacency (Euler demo):
+0: 1 2
+1: 2 0
+2: 0 1
+Has Euler tour? Yes
+Euler circuit (vertices): 0 1 2 0 2 1 0
