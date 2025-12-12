@@ -1,0 +1,14 @@
+Problem 1: Fibonacci
+- Matrix exponentiation gives O(log n) time via exponentiation by squaring
+- Recurrence: T(n) = T(n/2) + O(1) → Master Theorem Case 1 → O(log n)
+
+Problem 2: Knapsack
+- Greedy fails: example items (60,10), (100,20), (120,30), W=50
+- Greedy gives 160, optimal is 220
+- DP with O(W) space: iterate backwards to avoid reusing items
+
+Problem 3: Neuro Computing
+- Similarities are Gaussian distributed (CLT)
+- Larger N → smaller variance (Law of Large Numbers)
+- Sparse vectors count: C(2000,5) ≈ 2.65e14
+- Capacity: number of nearly orthogonal patterns storable

@@ -1,0 +1,15 @@
+Problem 1:
+1. P
+2. P
+3. NP-complete
+4. NP-complete
+5. NP-complete
+6. NP
+7. NP-hard
+
+Problem 2: Probability = 9.0%
+
+Problem 3:
+Coin A (0.5): 1.0
+Coin B (0.99): 0.08
+Coin C (0.01): 0.08

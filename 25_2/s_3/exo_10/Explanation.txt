@@ -1,0 +1,37 @@
+
+Problem 1 — Classification (very short)
+
+P contains efficiently solvable problems, while NP and NP-complete include harder ones.
+The exercise places basic algorithms in P and puzzles like Sudoku, 3-coloring, Clique and TSP in NP-complete.
+Factoring is hard but not NP-complete, and the Halting Problem is undecidable.
+
+Problem 2 — Bayes (very short)
+
+With low prevalence (0.1%), even a 99% accurate test gives many false positives.
+Bayes’ formula shows the true probability of disease after a positive test is only about 9%.
+Rare conditions usually require confirmatory testing.
+
+Problem 3 — Shannon Entropy (very short)
+
+Entropy measures uncertainty: a fair coin gives 1 bit, biased coins give much less.
+For p = 0.99 or 0.01 entropy is only about 0.08 bits.
+Highly predictable outcomes carry little information.
+
+Output: 
+Problem 1 classifications:
+1) {find max, linear search, shortest path in unweighted graph, matrix multiplication} -> P
+2) {sorting, Dijkstra (non-negative), BFS, DFS, merge sort, quicksort} -> P
+3) {sudoku (decision)} -> NP-complete
+4) {3-coloring, scheduling with conflicts} -> NP-complete
+5) {TSP (decision), Hamiltonian Cycle, Clique} -> NP-complete (optimization NP-hard)
+6) {cryptography, factoring large integers} -> hard, factoring not known NP-complete
+7) {Halting Problem, Busy Beaver} -> Undecidable
+
+Problem 2 (Bayes):
+Prevalence = 0.001000, sensitivity = 0.990000, specificity = 0.990000
+P(disease | test+) = 0.090164 (9.016393%)
+
+Problem 3 (Shannon entropy):
+Coin A p=0.50 -> H = 1.000000 bits
+Coin B p=0.99 -> H = 0.080793 bits
+Coin C p=0.01 -> H = 0.080793 bits

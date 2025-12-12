@@ -1,0 +1,26 @@
+So basically in problem 1, I created a function to count possible finite functions for different outputs and printed examples for n=2. For Problem 2, I defined NAND, then built NOT, AND, and OR from it, showing their truth tables to prove equivalence. For Problem 3, I approximated the circuit size for delta functions as O(n) and calculated the total for F as O(n * 2^n), using n=3 as a demo. The code runs and outputs results directly, with a tiny approximation flaw in sizing.
+
+output:
+1)
+Functions to {0,1}: 16
+Functions to {-1,0,1}: 81
+Functions to {0,1}^m (m=2): 256
+
+2)
+NOT from NAND:
+0 -> 1
+1 -> 0
+AND from NAND:
+0 0 -> 0
+0 1 -> 0
+1 0 -> 0
+1 1 -> 1
+OR from NAND:
+0 0 -> 0
+0 1 -> 1
+1 0 -> 1
+1 1 -> 1
+
+3)
+For n=3, one delta size: 4
+Total circuit size: 32

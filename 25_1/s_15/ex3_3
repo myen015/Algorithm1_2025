@@ -1,0 +1,40 @@
+
+import numpy as np, math
+
+def gen_random_binary(m,n,p=0.5,seed=None):
+    if seed is not None: np.random.seed(seed)
+    return (np.random.rand(m,n)<p).astype(int)
+
+def sim_l1(x,y):
+    num=int(x@y)
+    den=int(x.sum())*int(y.sum())
+    return num/(den if den!=0 else 1)
+
+def jaccard(x,y):
+    a=int(np.logical_and(x,y).sum())
+    b=int(np.logical_or(x,y).sum())
+    return a/(b if b!=0 else 1)
+
+N=20
+X=gen_random_binary(100,N,p=0.5,seed=42)
+pairs=200
+vals_sim=[sim_l1(X[i],X[j]) for i,j in np.random.randint(0,100,(pairs,2))]
+vals_jac=[jaccard(X[i],X[j]) for i,j in np.random.randint(0,100,(pairs,2))]
+
+def experiment(m=100,ns=(20,100,500),p=0.5):
+    out=[]
+    for n in ns:
+        X=gen_random_binary(m,n,p=p,seed=0)
+        v=[sim_l1(X[i],X[j]) for i,j in np.random.randint(0,m,(200,2))]
+        out.append((n,float(np.mean(v)),float(np.std(v))))
+    return out
+
+stats=experiment()
+
+def count_sparse(N,w):
+    return math.comb(N,w)
+count_2000_w5=count_sparse(2000,5)
+
+def capacity_bin(N,w,alpha=0.1):
+    return math.floor((N/w)*(1/alpha))
+cap_est=capacity_bin(2000,5,alpha=0.1)

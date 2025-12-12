@@ -1,0 +1,51 @@
+Explanation
+
+This script solves two problems:
+
+Graph Operations:
+
+ Generates a directed graph and its transposed graph.
+ Finds inverse (complement) edges for an undirected graph.
+ Observes that for dense graphs, the inverse graph has few edges.
+ Notes that dual graphs are only defined for planar graphs; non-planar examples like K5 have no dual.
+
+Bron-Kerbosch Trace:
+
+ Recursively searches for all maximal cliques in an undirected graph.
+ Tracks the state of R (current clique), P (candidates), and X (excluded nodes) at each recursion depth.
+ Reports each maximal clique found and identifies the largest one.
+
+
+Script Output
+
+Problem 1: Graph Operations
+
+Original Directed: {'A': ['B'], 'B': ['C'], 'C': ['A']}
+Transposed: {'A': ['C'], 'B': ['A'], 'C': ['B']}
+
+Original Edges: [('A', 'B'), ('B', 'C'), ('C', 'D')]
+Inverse Edges: [('A', 'C'), ('A', 'D'), ('B', 'D')]
+
+Problem 2: Bron-Kerbosch Trace
+
+Starting Algorithm...
+Step Call: R=set(), P={'A','B','C','D'}, X=set()
+Step Call: R={'A'}, P={'B','C'}, X=set()
+Step Call: R={'A','B'}, P={'C'}, X=set()
+Step Call: R={'A','B','C'}, P=set(), X=set()
+-> Found Maximal Clique: {'A','B','C'}
+Step Call: R={'A','C'}, P=set(), X={'B'}
+Step Call: R={'B'}, P={'C'}, X={'A'}
+Step Call: R={'B','C'}, P=set(), X={'A'}
+Step Call: R={'D'}, P={'C'}, X=set()
+Step Call: R={'C','D'}, P=set(), X=set()
+-> Found Maximal Clique: {'C','D'}
+
+Results
+
+All Maximal Cliques Found:
+{'A','B','C'}
+{'C','D'}
+Maximum Clique is: {'A','B','C'} with size 3
+
+

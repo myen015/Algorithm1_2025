@@ -1,0 +1,28 @@
+def knapsack_value(W,wt,val):
+    n=len(val)
+    dp=[0]*(W+1)
+    for i in range(n):
+        for w in range(W,wt[i]-1,-1):
+            cand=dp[w-wt[i]]+val[i]
+            if cand>dp[w]: dp[w]=cand
+    return dp[W]
+
+def knapsack_with_items(W,wt,val):
+    n=len(val)
+    dp=[0]*(W+1)
+    take=[[False]*(W+1) for _ in range(n)]
+    for i in range(n):
+        for w in range(W,wt[i]-1,-1):
+            cand=dp[w-wt[i]]+val[i]
+            if cand>dp[w]:
+                dp[w]=cand
+                take[i][w]=True
+    w=W
+    items=[]
+    for i in range(n-1,-1,-1):
+        if take[i][w]:
+            items.append(i)
+            w-=wt[i]
+    items.reverse()
+    return dp[W],items
+

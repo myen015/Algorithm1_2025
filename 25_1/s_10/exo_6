@@ -1,0 +1,223 @@
+Problem 1 
+
+1. Write the general class for this object
+2. Generate a tree of depth N = 3, with initial parent tree of weight 1/n
+3. create a depth first recursive function visiting each node and summing up the weights.
+Make sure it returns 1 for various n’s!
+4. Same with breadth first, check also 1!
+5. Same as above for both searches, but each time you reach a node, flip the value sign. Make
+sure you get 1 and -1 after both first and second searches (run a test with fixed n)!
+6. Write recursive and non recursive versions of breadth first.
+7. Whilst depth first 
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+using System;
+using System.Collections.Generic;
+
+public class TreeNode
+{
+    public double Weight{get;set;}
+    public List<TreeNode>Children{get;set;}
+    
+    public TreeNode(double weight)
+    {
+        Weight=weight;
+        Children=new List<TreeNode>();
+    }
+}
+
+public class TreeOperations
+{
+    //2.Build tree depth 3
+    public static TreeNode BuildTree(int n,int depth,double parentWeight=1.0)
+    {
+        if(depth==0)return null;        
+        var root=new TreeNode(parentWeight);
+        
+        if(depth>1)
+        {
+            for(int i=0;i<n;i++)
+            {
+                var childWeight=parentWeight/n;
+                var child=BuildTree(n,depth-1,childWeight);
+                root.Children.Add(child);
+            }
+        }        
+        return root;
+    }
+
+    
+    //3.Depth First Search
+    public static double DFS_Sum(TreeNode node)
+    {
+        if(node==null) return 0;
+        
+        double sum=node.Weight;
+        foreach(var child in node.Children) sum+=DFS_Sum(child);
+        return sum;
+    }
+
+
+    
+    //4.Breadth First Search
+    public static double BFS_Sum(TreeNode root)
+    {
+        if(root==null) return 0;        
+        double total=0;
+        Queue<TreeNode>queue = new Queue<TreeNode>();
+        queue.Enqueue(root);
+        
+        while(queue.Count>0)
+        {
+            TreeNode current = queue.Dequeue();
+            total+=current.Weight;
+            
+            foreach(var child in current.Children)
+            {
+                queue.Enqueue(child);
+            }
+        }
+        return total;
+    }
+
+
+    
+    //5.DFS with sign flip
+    public static double DFS_Flip(TreeNode node,bool positive=true)
+    {
+        if(node==null) return 0;
+        
+        double value = positive?node.Weight:-node.Weight;
+        double sum = value;
+        
+        foreach(var child in node.Children)
+        {
+            sum+=DFS_Flip(child,!positive);
+        }
+        return sum;
+    }
+
+
+    
+    //5.BFS with sign flip
+    public static double BFS_Flip(TreeNode root)
+    {
+        if(root==null) return 0;
+        
+        double total=0;
+        bool sign=true;
+        Queue<TreeNode>nodeQueue = new Queue<TreeNode>();
+        Queue<bool>signQueue = new Queue<bool>();
+        
+        nodeQueue.Enqueue(root);
+        signQueue.Enqueue(sign);
+        
+        while(nodeQueue.Count>0)
+        {
+            TreeNode current = nodeQueue.Dequeue();
+            bool currentSign = signQueue.Dequeue();
+            
+            total+=currentSign?current.Weight:-current.Weight;
+            
+            foreach(var child in current.Children)
+            {
+                nodeQueue.Enqueue(child);
+                signQueue.Enqueue(!currentSign);
+            }
+        }
+        return total;
+    }
+    
+    //6.Recursive BFS
+    public static double BFS_Recursive(TreeNode root)
+    {
+        if(root==null) return 0;
+        List<TreeNode>currentLevel = new List<TreeNode>{root};
+        return BFS_RecursiveHelper(currentLevel);
+    }
+    
+    private static double BFS_RecursiveHelper(List<TreeNode>level)
+    {
+        if(level.Count==0) return 0;
+        
+        double sum=0;
+        List<TreeNode>nextLevel = new List<TreeNode>();
+        
+        foreach(var node in level)
+        {
+            sum+=node.Weight;
+            nextLevel.AddRange(node.Children);
+        }        
+        return sum+BFS_RecursiveHelper(nextLevel);
+    }
+
+    
+    //Print tree
+    public static void PrintTree(TreeNode node,string indent="")
+    {
+        if(node==null) return;
+        
+        Console.WriteLine($"{indent}Weight:{node.Weight:F4}");
+        foreach(var child in node.Children)
+        {
+            PrintTree(child,indent+"  ");
+        }
+    }
+}
+
+class Program
+{
+    static void TestTree(int n)
+    {
+        Console.WriteLine($"\n---Test for n={n}");
+        
+        var root=TreeOperations.BuildTree(n,3,1.0);
+        
+        Console.WriteLine("Tree structure:");
+        TreeOperations.PrintTree(root);
+        
+        double dfs=TreeOperations.DFS_Sum(root);
+        double bfs=TreeOperations.BFS_Sum(root);
+        double bfsRec=TreeOperations.BFS_Recursive(root);
+        double dfsFlip=TreeOperations.DFS_Flip(root);
+        double bfsFlip=TreeOperations.BFS_Flip(root);
+        
+        Console.WriteLine($"DFS sum:{dfs:F6}");
+        Console.WriteLine($"BFS sum:{bfs:F6}");
+        Console.WriteLine($"BFS recursive:{bfsRec:F6}");
+        Console.WriteLine($"DFS flip:{dfsFlip:F6}");
+        Console.WriteLine($"BFS flip:{bfsFlip:F6}");
+        
+        bool dfsOk=Math.Abs(dfs-1.0)<0.0001;
+        bool bfsOk=Math.Abs(bfs-1.0)<0.0001;
+        bool bfsRecOk=Math.Abs(bfsRec-1.0)<0.0001;
+        
+        Console.WriteLine($"Check:DFS={dfsOk},BFS={bfsOk},BFS recursive={bfsRecOk}");
+    }
+
+
+
+
+    
+    static void Main()
+    {
+        Console.WriteLine("Tree with weight distribution");
+        
+        TestTree(2);
+        TestTree(3);
+        TestTree(4);
+
+        
+        //7.Explanation why recursive BFS is bad
+        Console.WriteLine("\n---Explanation");
+        Console.WriteLine("Recursive BFS is not recommended because:");
+        Console.WriteLine("-Need to pass entire level as parameter");
+        Console.WriteLine("-Uses O(width) stack memory per level");
+        Console.WriteLine("-For full tree width=n^depth -> exponential growth");
+        Console.WriteLine("-Can cause stack overflow");
+        Console.WriteLine("DFS recursive uses O(depth) memory -> much safer");
+        Console.WriteLine("Iterative BFS with queue is more efficient");
+      
+    }
+}

@@ -1,0 +1,53 @@
+Problem 1 — Counting finite functions.
+
+A domain {0,1}^n has 2^n elements; each input can map to k outputs independently, 
+giving k^{2^n} functions. For {0,1} outputs there are 2^{2^n}, for {-1,0,1} there are 3^{2^n}, 
+and for {0,1}^m there are 2^{m·2^n}. Visualize with a decision tree: each leaf labelled independently gives all possibilities.
+
+Problem 2 — NAND universality.
+
+NAND is functionally complete: NOT(x)=x↑x, AND(x,y)=(x↑y)↑(x↑y), OR(x,y)=(x↑x)↑(y↑y). 
+Any circuit with n gates can be replaced by ≤3n NAND gates, proving universality.
+
+Problem 3 — Boolean circuits size.
+
+Each minterm δ_x (1 if input=x else 0) uses O(n) gates. F is OR of δ_x for F(x)=1. With ≤2^n minterms, 
+total size is O(n·2^n). Constructive DNF circuits show this bound explicitly.
+
+Output:
+=== Fundamental Algorithm Techniques - Problem Set #9 demo ===
+
+Problem 1 тАФ counting finite functions
+Domain size = 2^3 inputs.
+Number of functions to {0,1}            = 2^(2^3)
+Number of functions to {-1,0,1}         = 3^(2^3)
+Number of functions to {0,1}^2 = 2^(2 * 2^3)
+(Exact numeric values grow extremely fast; numeric computation only for small n below.)
+
+Numeric (small n,m) results:
+2^(2^3) = 256
+3^(2^3) = 6561
+4^(2^3) = 65536
+
+Problem 2 тАФ NAND constructions and truth tables
+NAND truth table (A B | A NAND B):
+A B | NAND | NOT(A) | AND_via_NAND | OR_via_NAND
+0 0 |   1   |    1    |      0       |     0
+0 1 |   1   |    1    |      0       |     1
+1 0 |   1   |    0    |      0       |     1
+1 1 |   0   |    0    |      1       |     1
+
+Verification: NOT(x)=x NAND x, AND(x,y)=(x NAND y) NAND (x NAND y), OR(x,y)=(x NAND x) NAND (y NAND y)
+
+Theorem remark: since NOT/AND/OR are implementable with тЙд3 NANDs each, any n-gate circuit can be simulated with at most 3n NAND gates.
+
+Problem 3 тАФ Universality and circuit-size estimate
+Given n=3, truth table has 3 minterm(s) with value 1 out of 8.
+Each minterm ╬┤_x can be implemented as an AND of n literals (a literal may be a variable or its negation), so building one minterm needs O(n) gates.
+Combining all needed minterms with OR produces F; worst-case number of minterms is 2^n, so the naive DNF circuit size is O(n * 2^n).
+
+DNF (sum of minterms) representation (minterms shown as binary patterns):
+(┬мv2 AND v1 AND v0) OR (v2 AND ┬мv1 AND v0) OR (v2 AND v1 AND ┬мv0)
+
+Rough gate estimate (binary gates): minterms тЙИ 6, OR-combine тЙИ 2, total тЙИ 8.
+This is consistent with O(n * 2^n) worst-case complexity.

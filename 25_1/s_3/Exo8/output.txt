@@ -1,0 +1,22 @@
+For Problem 1, I wrote a simple function to reverse a directed graph in O(V+E) time and demonstrated it by printing the reversed edges from the given example. For Problem 2, I checked if a graph has an Euler tour by comparing in/out degrees, then used a stack-based algorithm to find and print one for a small cycle graph. For Problem 3, I implemented DFS topological sort starting from A, G, and D, outputting the course orderings like A B D C E G F. It all runs and prints results directly.
+
+Output:
+1)
+Reversed edges:
+B -> A
+C -> A
+C -> B
+D -> B
+E -> C
+E -> D
+E -> G
+F -> D
+F -> G
+
+2)
+Euler tour: A -> B -> C -> A
+
+3)
+Topo from A: G A B D F C E
+Topo from G: A B D C G E F
+Topo from D: G A B C D F E

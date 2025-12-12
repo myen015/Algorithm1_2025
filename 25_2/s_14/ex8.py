@@ -1,0 +1,309 @@
+from collections import defaultdict, deque
+from typing import Dict, List, Set, Tuple
+import copy
+
+# ----------------------------- Graph helpers -----------------------------
+# Represent directed graphs as adjacency dict: {u: [v1,v2,...]}
+
+def normalize_graph(adj: Dict) -> Dict:
+    """Return a copy where every vertex appears as a key (even if it has no outgoing edges)."""
+    G = {u: list(adj[u]) for u in adj}
+    for u in list(G.keys()):
+        for v in G[u]:
+            if v not in G:
+                G[v] = []
+    return G
+
+# ----------------------------- Problem 1 ---------------------------------
+# 1. Reverse graph in O(V+E)
+
+def reverse_graph(adj: Dict) -> Dict:
+    """Return the reversed graph rev(G) in O(V+E) time.
+    adj: adjacency dict {u: [v,...]}
+    """
+    G = normalize_graph(adj)
+    R = {u: [] for u in G}
+    for u in G:
+        for v in G[u]:
+            R[v].append(u)
+    return R
+
+# Kosaraju's algorithm to compute SCCs
+
+def kosaraju_scc(adj: Dict) -> Tuple[List[List], Dict]:
+    """Return (list_of_sccs, comp_id_map)
+    - list_of_sccs: list of components, each component is a list of vertices
+    - comp_id_map: dictionary mapping vertex -> component index
+
+    Time O(V+E).
+    """
+    G = normalize_graph(adj)
+    visited = set()
+    order = []
+
+    def dfs1(u):
+        visited.add(u)
+        for v in G[u]:
+            if v not in visited:
+                dfs1(v)
+        order.append(u)
+
+    for u in G:
+        if u not in visited:
+            dfs1(u)
+
+    GR = reverse_graph(G)
+    visited.clear()
+    comp_id = {}
+    components = []
+
+    def dfs2(u, comp):
+        visited.add(u)
+        comp.append(u)
+        comp_id[u] = len(components)
+        for v in GR[u]:
+            if v not in visited:
+                dfs2(v, comp)
+
+    for u in reversed(order):
+        if u not in visited:
+            comp = []
+            dfs2(u, comp)
+            components.append(comp)
+
+    return components, comp_id
+
+
+def build_condensation(adj: Dict) -> Dict:
+    """Build condensation (SCC graph) scc(G): nodes are component indices.
+    Return adjacency dict of condensation graph (no duplicate edges)."""
+    comps, comp_id = kosaraju_scc(adj)
+    k = len(comps)
+    C = {i: set() for i in range(k)}
+    G = normalize_graph(adj)
+    for u in G:
+        for v in G[u]:
+            cu, cv = comp_id[u], comp_id[v]
+            if cu != cv:
+                C[cu].add(cv)
+    # convert sets to lists
+    return {i: sorted(list(C[i])) for i in C}
+
+# ----------------------------- Problem 1 proofs (encoded tests) -------------
+# We will verify programmatically:
+# - scc(rev(G)) == rev(scc(G)) as isomorphic adjacency (component labels may differ, but structure equal)
+
+
+def condensation_equal_up_to_reverse(cond1: Dict, cond2: Dict) -> bool:
+    """Check if cond2 equals reverse of cond1 (i.e., cond2 == rev(cond1))."""
+    R1 = reverse_graph(cond1)
+    # normalize both
+    n1 = normalize_graph(R1)
+    n2 = normalize_graph(cond2)
+    # compare adjacency lists as sets
+    if set(n1.keys()) != set(n2.keys()):
+        return False
+    for u in n1:
+        if set(n1[u]) != set(n2[u]):
+            return False
+    return True
+
+# ----------------------------- Problem 2 Euler Tour ------------------------
+
+def has_euler_tour(adj: Dict) -> bool:
+    """Check if directed graph (strongly connected) has Euler tour using degree condition.
+    Returns True iff in-degree == out-degree for every vertex. (Assumes SCC connectivity requirement satisfied)
+    """
+    G = normalize_graph(adj)
+    indeg = {u: 0 for u in G}
+    outdeg = {u: len(G[u]) for u in G}
+    for u in G:
+        for v in G[u]:
+            indeg[v] += 1
+    for u in G:
+        if indeg[u] != outdeg[u]:
+            return False
+    return True
+
+
+def hierholzer_euler(adj: Dict) -> List:
+    """Return an Euler circuit as a list of vertices (in order). If none exists, return []
+    Implementation of Hierholzer's algorithm in O(E).
+    """
+    G = normalize_graph(adj)
+    if not has_euler_tour(G):
+        return []
+    # optional: check connectivity of vertices with nonzero degree (simple DFS)
+    nonzero = [u for u in G if len(G[u]) > 0 or any(u in G[v] for v in G)]
+    if nonzero:
+        start = nonzero[0]
+    else:
+        # graph with no edges -> trivial cycle (choose any vertex)
+        start = next(iter(G))
+
+    # copy adjacency lists and use as stack of edges
+    local_adj = {u: list(G[u]) for u in G}
+    stack = [start]
+    circuit = []
+    while stack:
+        v = stack[-1]
+        if local_adj[v]:
+            u = local_adj[v].pop()
+            stack.append(u)
+        else:
+            circuit.append(stack.pop())
+    circuit.reverse()
+    return circuit
+
+# ----------------------------- Problem 3 Topological sort ------------------
+
+def kahn_topological_sort(adj: Dict, prefer_first: List = None) -> List:
+    """Kahn's algorithm. If prefer_first is provided (list of vertices), try to pop them earlier
+    by seeding priority: when multiple sources available, pick the one with smallest index in prefer_first.
+    prefer_first should be a list representing priority order; vertices not in it are treated equally afterwards.
+    Returns one topological ordering or empty list if cycle exists.
+    """
+    G = normalize_graph(adj)
+    indeg = {u: 0 for u in G}
+    for u in G:
+        for v in G[u]:
+            indeg[v] += 1
+    # sources queue
+    sources = [u for u in G if indeg[u] == 0]
+    if prefer_first:
+        # custom priority: stable sort using index in prefer_first if present
+        def keyf(x):
+            try:
+                return (0, prefer_first.index(x))
+            except ValueError:
+                return (1, 0)
+        sources.sort(key=keyf)
+    else:
+        sources.sort()
+
+    q = deque(sources)
+    order = []
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in G[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                q.append(v)
+    if len(order) != len(G):
+        return []  # cycle
+    return order
+
+# Helper: enumerate a few topological orders by choosing among available sources
+
+def enumerate_topo_orders(adj: Dict, limit: int = 5) -> List[List]:
+    """Return up to `limit` different topological orders using backtracking with pruning.
+    Only suitable for small graphs (exponential in worst case)."""
+    G = normalize_graph(adj)
+    indeg = {u: 0 for u in G}
+    for u in G:
+        for v in G[u]:
+            indeg[v] += 1
+    sources = sorted([u for u in G if indeg[u] == 0])
+    results = []
+
+    def backtrack(order, indeg_local):
+        if len(results) >= limit:
+            return
+        if len(order) == len(G):
+            results.append(order.copy())
+            return
+        # collect current sources
+        cur_sources = [u for u in G if indeg_local[u] == 0 and u not in order]
+        cur_sources.sort()
+        for u in cur_sources:
+            # choose u
+            new_indeg = indeg_local.copy()
+            new_indeg[u] = -1  # mark used
+            for v in G[u]:
+                new_indeg[v] -= 1
+            order.append(u)
+            backtrack(order, new_indeg)
+            order.pop()
+            if len(results) >= limit:
+                return
+
+    backtrack([], indeg)
+    return results
+
+# ----------------------------- Demo / Example graphs ----------------------
+
+EX_GRAPH = {
+    'A': ['B','C'],
+    'B': ['C','D'],
+    'C': ['E'],
+    'D': ['E','F'],
+    'E': [],
+    'F': [],
+    'G': ['F','E']
+}
+
+# Another graph for SCC demonstration (with a known reversed condensation)
+SCC_TEST = {
+    '1': ['2'],
+    '2': ['3','4'],
+    '3': ['1'],
+    '4': ['5'],
+    '5': []
+}
+
+# ----------------------------- Main runnable demo -------------------------
+if __name__ == '__main__':
+    print('\n=== Problem 1: Reverse Graph (O(V+E)) demo ===')
+    print('Original EX_GRAPH adjacency:')
+    for u in EX_GRAPH:
+        print(f'  {u} -> {EX_GRAPH[u]}')
+
+    rev_ex = reverse_graph(EX_GRAPH)
+    print('\nReversed graph:')
+    for u in sorted(rev_ex.keys()):
+        print(f'  {u} -> {rev_ex[u]}')
+
+    print('\nKosaraju SCCs for SCC_TEST:')
+    comps, comp_id = kosaraju_scc(SCC_TEST)
+    print('  components:', comps)
+    cond = build_condensation(SCC_TEST)
+    print('  condensation adjacency:', cond)
+
+    # verify scc(rev(G)) == rev(scc(G))
+    cond_rev = build_condensation(reverse_graph(SCC_TEST))
+    rev_cond = reverse_graph(cond)
+    print('\ncondensation of rev(G):', cond_rev)
+    print('reverse of condensation(G):', rev_cond)
+    print('Equality (as graphs):', condensation_equal_up_to_reverse(cond, cond_rev))
+
+    print('\n=== Problem 2: Euler Tour demo ===')
+    G_euler = {
+        'a': ['b'],
+        'b': ['c'],
+        'c': ['a']
+    }
+    # a simple directed cycle a->b->c->a has Euler tour
+    print('Graph for Euler test:', G_euler)
+    print('Has Euler tour (degree cond):', has_euler_tour(G_euler))
+    tour = hierholzer_euler(G_euler)
+    print('Euler circuit:', tour)
+
+    # Non-euler example
+    G_non_euler = {
+        'x': ['y'],
+        'y': ['z'],
+        'z': []
+    }
+    print('\nNon-Euler graph deg check:', has_euler_tour(G_non_euler))
+    print('Euler circuit attempt (should be empty):', hierholzer_euler(G_non_euler))
+
+    print('\n=== Problem 3: Topological sorts (EX_GRAPH) ===')
+    print('Kahn topological sort (default):', kahn_topological_sort(EX_GRAPH))
+    print('Kahn topological sort preferring A first:', kahn_topological_sort(EX_GRAPH, prefer_first=['A']))
+    print('\nEnumerate a few topological orders (limit 5):')
+    orders = enumerate_topo_orders(EX_GRAPH, limit=5)
+    for i, o in enumerate(orders, 1):
+        print(f'  {i}.', o)
+
+    print('\n\nAll demos finished.\n')
