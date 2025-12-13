@@ -1,0 +1,23 @@
+
+======================================================================
+HASH FUNCTION ANALYSIS - EXECUTIVE SUMMARY
+======================================================================
+Generated: 2025-12-12 13:11:59
+
+COLLISION RATES (English Dataset):
+  Simple Hash:  56.82%
+  FNV-1a:        0.96%
+  MurmurHash3:   0.96%
+
+SPEED (microseconds per operation):
+  Simple Hash:  0.377 μs
+  FNV-1a:       0.645 μs
+  MurmurHash3:  1.583 μs
+
+RECOMMENDATION:
+  For hash tables: Use MurmurHash3 or FNV-1a
+  For security:    Use SHA-256 or bcrypt
+  For education:   Study Simple Hash's collisions
+
+See analysis_report.md for full details.
+======================================================================
