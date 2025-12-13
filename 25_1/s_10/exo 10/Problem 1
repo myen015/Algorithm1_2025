@@ -1,0 +1,25 @@
+Problem 1 (P, NP, NP-complete, NP-hard, 4/10 ). Classify the problems below into their
+corresponding class or classes (each line has same class).
+---------------------------------------------------------------------------------------------------------------------------
+1. find max, linear search, shortest path in unweighted graph, matrix multiplication
+P - all of them have polynomialtime solutions: 
+O(n) for max/linear search, O(V+E) for unweighted shortest path (BFS), O(n³) for matrix multiplication
+
+2. sorting of list, Dijkstra on non-negative weights, BFS, DFS, merge sort, quicksort
+P - classic polynomialtome algorithms: 
+sorting is O(n log n), BFS/DFS O(V+E), Dijkstra O((V+E) log V)
+
+3. sudoku
+NP-compl - solution verification is polynomial but finding a solution is hard and reduces to Boolean satisfiability problem
+
+4. 3 coloring of graph, scheduling with conflicts
+NP-complete - 3-coloring is NP-complete. And scheduling with conflicts also reduce to graph coloring
+
+5. Traveling Salesperson Problem, Hamiltonian Cycle, Clique
+NP-complete - All NP-complete problems and have polynomialtime verification
+
+6. Cryptography, factoring large integers
+NP - because we can verify the given factors' correctness by multiplication in polynomialtime
+
+7. Halting Problem, busy beaver
+Undecidable - Halting Problem: no algorithm can solve it for all programs.And busy beaver is non-computable
