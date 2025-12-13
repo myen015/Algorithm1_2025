@@ -1,0 +1,51 @@
+import random
+import math
+
+# 1. Complexity
+problems = [
+    ["Find max, linear search, unweighted SP, matrix mult", "P"],
+    ["Sorting, Dijkstra(non-neg), BFS, DFS, merge/quicksort", "P"],
+    ["Sudoku", "NPC"],
+    ["3-coloring, scheduling conflicts", "NPC"],
+    ["TSP, Hamiltonian, Clique", "NPC"],
+    ["Cryptography, factoring", "UNKNOWN"],
+    ["Halting, Busy Beaver", "UNDECIDABLE"]
+]
+print("1. P/NP CLASS:")
+for i, (desc, cat) in enumerate(problems, 1):
+    print(f" {i:2}. {desc:45} → {cat}")
+
+# 2. Bayes
+p = 0.001
+a = 0.99
+result = (a*p)/(a*p + (1-a)*(1-p))
+print(f"\n2. BAYES DISEASE:")
+print(f" Prev={p:.3%}, Acc={a:.1%}")
+print(f" P(sick|+) = {result:.1%}")
+print(f" Why? In 1000: 1 sick (→~1 TP), 999 healthy (→~10 FP)")
+print(f" Total + = ~11, only 1 sick → ~9%")
+
+# 3. Entropy
+def H(p):
+    q = 1-p
+    return 0 if p==0 or p==1 else -(p*math.log2(p) + q*math.log2(q))
+
+coins = [("Fair 50%", 0.5), ("Biased 99%", 0.99), ("Rare 1%", 0.01)]
+print("\n3. ENTROPY:")
+for name, p in coins:
+    print(f" {name:12} → {H(p):.3f} bits")
+print(" Why? Fair=max uncertainty=1bit, 99%=predictable=0.08bits")
+
+# 4. Simulation bonus
+print("\n4. SIMULATION (100k people):")
+sick = 0; tp = 0; fp = 0
+for _ in range(100000):
+    has = random.random() < p
+    test_pos = random.random() < (a if has else 1-a)
+    if has: sick += 1
+    if has and test_pos: tp += 1
+    if not has and test_pos: fp += 1
+
+prob_sim = tp/(tp+fp) if (tp+fp)>0 else 0
+print(f" Simulated P(sick|+) = {prob_sim:.1%}")
+print(f" Diff from theory: {abs(prob_sim-result)*100:.2f}%")
