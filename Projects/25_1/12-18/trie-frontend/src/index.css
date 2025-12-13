@@ -1,68 +1,420 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color: #e5e7eb;
+    background: #0b1220;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+    margin: 0;
+    min-height: 100vh;
+    background: #0b1220;
+}
+
+
+a {
+    font-weight: 500;
+    color: #646cff;
+    text-decoration: inherit;
+}
+a:hover {
+    color: #535bf2;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+    font-size: 3.2em;
+    line-height: 1.1;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: pointer;
+    transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+    border-color: #646cff;
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+    outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.app {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 16px;
+    background: #121212;
+    color: #f5f5f5;
+    min-height: 100vh;
+    box-sizing: border-box;
 }
+
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.app-header h1 {
+    margin: 0;
+}
+
+.init-button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    background: #2563eb;
+    color: white;
+    font-weight: 500;
+}
+
+.init-button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.init-info {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.error-box {
+    background: #7f1d1d;
+    color: #fee2e2;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.column {
+    background: #1e1e1e;
+    border-radius: 10px;
+    padding: 12px;
+    box-sizing: border-box;
+    min-height: 400px;
+}
+
+.search-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #3f3f46;
+    background: #18181b;
+    color: #e5e5e5;
+}
+
+.search-input::placeholder {
+    color: #71717a;
+}
+
+.search-select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #3f3f46;
+    background: #18181b;
+    color: #e5e5e5;
+}
+
+.primary-button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background: #22c55e;
+    color: #022c22;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.primary-button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.small-button {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.small-button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.results-box {
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    background: #09090b;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.result-item {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #27272a;
+    margin-bottom: 6px;
+}
+
+.result-text {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.result-meta {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    display: flex;
+    justify-content: space-between;
+}
+
+.placeholder {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.cluster-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.cluster-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.cluster-button {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid #3f3f46;
+    background: #18181b;
+    color: #e5e5e5;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.cluster-button.active {
+    background: #22c55e;
+    color: #022c22;
+    border-color: #166534;
+}
+
+.cluster-title {
+    margin-top: 0;
+}
+
+@media (max-width: 768px) {
+    body {
+        place-items: stretch;
+    }
+
+    .app {
+        padding: 12px;
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #cbd5f5;
+    background: #020617;
+    border-radius: 999px;
+    padding: 2px 8px;
+}
+
+.legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+}
+
+.legend-label {
+    white-space: nowrap;
+}
+
+.table3d-wrapper {
+    margin-top: 12px;
+    max-height: 260px;
+    overflow: auto;
+    border-radius: 8px;
+    border: 1px solid #1f2937;
+}
+
+.table3d {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.table3d th,
+.table3d td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #111827;
+}
+
+.table3d thead {
+    background: #020617;
+}
+
+.cluster-pill {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    color: #0b1120;
+}
+
+.muted {
+    color: #9ca3af;
+}
+
+.muted.small {
+    font-size: 13px;
+}
+
+.muted.tiny {
+    font-size: 11px;
+}
+
+.viz-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.viz-tab {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0b1220;
+    color: #e5e7eb;
+    font-size: 0.85rem;
+}
+
+.viz-tab.active {
+    background: #22c55e;
+    color: #052e1a;
+    border-color: #166534;
+    font-weight: 700;
+}
+
+.viz-canvas {
+    height: 320px;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #1f2937;
+    background: #09090b;
+    overflow: hidden;
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid #27272a;
+    background: #0b1220;
+    font-size: 12px;
+    opacity: 0.95;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    display: inline-block;
+}
+
+.table3d-wrapper {
+    border-radius: 12px;
+    border: 1px solid #1f2937;
+    background: #09090b;
+    max-height: 320px;
+    overflow: auto;
+}
+
+.table3d {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.table3d thead th {
+    position: sticky;
+    top: 0;
+    background: #0b1220;
+    border-bottom: 1px solid #111827;
+    padding: 8px;
+    text-align: left;
+}
+
+.table3d td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #111827;
+}
+
+.cluster-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    color: #041014;
+    font-weight: 700;
+}
+

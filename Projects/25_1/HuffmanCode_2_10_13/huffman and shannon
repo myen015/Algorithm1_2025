@@ -1,0 +1,405 @@
+// Huffman 
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+// Node for Huffman tree 
+class TreeNode
+{
+    public char Letter;          
+    public int Frequency;       
+    public TreeNode Left;        // represents 0 bit
+    public TreeNode Right;       // represents 1 bit
+    
+    // For leaf nodes (1 character)
+    public TreeNode(char letter, int frequency)
+    {
+        Letter = letter;
+        Frequency = frequency;
+    }
+    
+    // For internal nodes (combines two other nodes)
+    public TreeNode(TreeNode left, TreeNode right)
+    {
+        Left = left;
+        Right = right;
+        Frequency = left.Frequency + right.Frequency;
+    }
+    
+    // comparing frequency for sorting
+    public int CompareTo(TreeNode TN)
+    {
+        return Frequency.CompareTo(TN.Frequency);
+    }
+}
+
+class HuffmanCoder
+{
+    static void Main()
+    {
+        Console.WriteLine("---- Huffman Coding -----");
+        
+        Console.Write("Enter your text: ");
+        string inputText = Console.ReadLine();
+        
+        if(string.IsNullOrEmpty(inputText))
+        {
+            Console.WriteLine("Nothing to compress!");
+            return;
+        }
+        
+        // Step 1: Frequency dictionary
+        Dictionary<char, int> frequencies = new Dictionary<char, int>();
+        foreach(char c in inputText)
+        {
+            if(frequencies.ContainsKey(c)) frequencies[c]++;     
+            else frequencies[c] = 1; 
+        }
+        
+        Console.WriteLine("\nUnique ccharacters:");
+        foreach(var item in frequencies.OrderBy(x => x.Value))
+        {
+            Console.WriteLine($"'{item.Key}': {item.Value} times");
+        }
+        
+
+        // Step 2: Building the Huffman tree from frequency data
+        TreeNode treeRoot = BuildTree(frequencies);
+        
+        // Step 3: Building binary codes 
+        Dictionary<char, string> codeTable = new Dictionary<char, string>();
+        BuildCodes(treeRoot, "", codeTable);
+        
+        // Displaying the codes
+        Console.WriteLine("\nCodes:");
+        foreach(var code in codeTable.OrderBy(x => x.Value.Length))
+        {
+            Console.WriteLine($"'{code.Key}': {code.Value} ({code.Value.Length} bits)");
+        }
+        
+        // Step 4: Encoding of the original text 
+        string compressed = EncodeText(inputText, codeTable);
+        
+        Console.WriteLine($"\nEncoded: {compressed}");
+        Console.WriteLine($"Encoded length: {compressed.Length} chars");
+
+        // Step 5: Decoding 
+        string decoded = DecodeText(compressed, treeRoot);
+        Console.WriteLine($"Decoded: {decoded}");
+
+        // Displaying results
+        Console.WriteLine("\nBit by bit:");
+        int totalBits = 0;
+
+        foreach(char c in inputText)
+        {
+            int bits = codeTable[c].Length;
+            totalBits += bits;
+            Console.WriteLine($"'{c}' → {codeTable[c]} ({bits} bits)");
+        }
+        
+        int originalSize = inputText.Length * 8;  // Each character takes 8 bits
+        Console.WriteLine($"\nFinal result:");
+        Console.WriteLine($"Original: {originalSize} bits");
+        Console.WriteLine($"Compressed: {totalBits} bits");
+        Console.WriteLine($"Saved: {originalSize - totalBits} bits");
+        Console.WriteLine($"Ratio: {(double)totalBits / originalSize:P1}"); 
+
+        Console.WriteLine($"\nVerification:");
+        Console.WriteLine($"Original == Decoded: {inputText == decoded}");
+    }
+    
+    // Builds the Huffman tree
+    static TreeNode BuildTree(Dictionary<char, int> frequencies)
+    {
+        var nodes = new SortedSet<TreeNode>(Comparer<TreeNode>.Create((a, b) => 
+            a.Frequency==b.Frequency ? a.GetHashCode().CompareTo(b.GetHashCode()) : a.Frequency.CompareTo(b.Frequency)));
+        
+        // Leaves for each unique character
+        foreach(var pair in frequencies)
+        {
+            nodes.Add(new TreeNode(pair.Key, pair.Value));
+        }
+        
+        // Combining nodes until only 1 root remains
+        while(nodes.Count > 1)
+        {
+            // 2 nodes with smallest frequencies
+            TreeNode smallest = nodes.Min;
+            nodes.Remove(smallest);
+            TreeNode smallest2 = nodes.Min;
+            nodes.Remove(smallest2);
+            
+            // A new parent node that combines 2 smallest ones
+            TreeNode parent = new TreeNode(smallest, smallest2);
+            Console.WriteLine($"Combine: {GetNodeName(smallest)} + {GetNodeName(smallest2)} = {parent.Frequency}");
+            
+            nodes.Add(parent);
+        }
+        
+        return nodes.Min; // the last node - root
+    }
+    
+    // Display node info
+    static string GetNodeName(TreeNode node)
+    {
+        if(node.Left == null && node.Right == null)
+            return $"'{(node.Letter == ' ' ? "space" : node.Letter.ToString())}':{node.Frequency}";
+        else return $"[{node.Frequency}]";  // Internal node
+    }
+    
+    // Binary codes for each character
+    static void BuildCodes(TreeNode node, string currentCode, Dictionary<char, string> codes)
+    {
+        if(node == null) return;
+        
+        // Storing codes of a leaf node (real character)
+        if(node.Left == null && node.Right == null)
+        {
+            codes[node.Letter] = currentCode;
+            return;
+        }
+        
+        BuildCodes(node.Left, currentCode + "0", codes);
+        BuildCodes(node.Right, currentCode + "1", codes);
+    }
+    
+    // Replacing each character with its Huffman code
+    static string EncodeText(string text, Dictionary<char, string> codes)
+    {
+        StringBuilder result = new StringBuilder();
+        foreach(char c in text)
+        {
+            result.Append(codes[c]);
+        }
+        return result.ToString();
+    }
+
+    
+    // Decoding compressed binary string
+    static string DecodeText(string compressed, TreeNode root)
+    {
+        StringBuilder result = new StringBuilder();
+        TreeNode currentNode = root;
+        
+        foreach(char bit in compressed)
+        {
+            if(bit == '0') currentNode = currentNode.Left;
+            else currentNode = currentNode.Right;
+            
+            if(currentNode.Left == null && currentNode.Right == null) // leaf – real character
+            {
+                result.Append(currentNode.Letter);
+                currentNode = root; 
+            }
+        }
+        
+        return result.ToString();
+    }
+
+}
+
+
+
+/* ====================================================================================================================================================================*/
+// Shannon-Fano
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+class CharData
+{
+    public char Character;
+    public int Frequency;
+    public string Code;
+    
+    public CharData(char character, int frequency)
+    {
+        Character = character;
+        Frequency = frequency;
+        Code = "";
+    }
+}
+
+class ShannonFanoCoder
+{
+    static void Main()
+    {
+        Console.WriteLine("---- Shannon-Fano Coding ----");
+        
+        Console.Write("Enter your text: ");
+        string inputText = Console.ReadLine();
+        
+        if(string.IsNullOrEmpty(inputText))
+        {
+            Console.WriteLine("Nothing to compress!");
+            return;
+        }
+        
+        // Character frequencies
+        Dictionary<char, int> frequencies = new Dictionary<char, int>();
+        foreach(char c in inputText)
+        {
+            if(frequencies.ContainsKey(c)) frequencies[c]++;
+            else frequencies[c] = 1;
+        }
+        
+        // List of sorted frequencies (highest first)
+        List<CharData> charList = new List<CharData>();
+        foreach(var pair in frequencies)
+        {
+            charList.Add(new CharData(pair.Key, pair.Value));
+        }
+        
+        charList = charList.OrderByDescending(x => x.Frequency).ToList();
+        
+        Console.WriteLine("\nCharacters:");
+        foreach(var item in charList)
+        {
+            Console.WriteLine($"'{item.Character}': {item.Frequency} times");
+        }
+        
+        // Building ShannonFano codes
+        BuildShannonFanoCodes(charList, 0, charList.Count - 1, "");
+        
+        // Dictionary of codes
+        Dictionary<char, string> codeTable = new Dictionary<char, string>();
+        foreach(var item in charList)
+        {
+            codeTable[item.Character] = item.Code;
+        }
+        
+        // Showing generated codes
+        Console.WriteLine("\nGenerated codes:");
+        foreach(var code in codeTable.OrderBy(x => x.Value.Length))
+        {
+            Console.WriteLine($"'{code.Key}': {code.Value} ({code.Value.Length} bits)");
+        }
+        
+        // Encoding the text
+        string compressed = EncodeText(inputText, codeTable);
+        
+        Console.WriteLine($"\nEncoded: {compressed}");
+        Console.WriteLine($"Encoded length: {compressed.Length} chars");
+        
+        // Compression results
+        Console.WriteLine("\nBit by bit:");
+        int totalBits = 0;
+        foreach(char c in inputText)
+        {
+            int bits = codeTable[c].Length;
+            totalBits += bits;
+            Console.WriteLine($"'{c}' → {codeTable[c]} ({bits} bits)");
+        }
+        
+        int originalSize = inputText.Length * 8;
+        Console.WriteLine($"\nFinal result:");
+        Console.WriteLine($"Original: {originalSize} bits");
+        Console.WriteLine($"Compressed: {totalBits} bits");
+        Console.WriteLine($"Saved: {originalSize - totalBits} bits");
+        Console.WriteLine($"Ratio: {(double)totalBits / originalSize:P1}");
+        
+        // Splitting process
+        Console.WriteLine($"\nSplitting process:");
+        ShowSplittingProcess(charList);
+    }
+    
+    // Building code by splitting groups
+    static void BuildShannonFanoCodes(List<CharData> chars, int start, int end, string currentCode)
+    {
+        // 1 character left
+        if(start == end)
+        {
+            chars[start].Code = currentCode;
+            return;
+        }
+        
+        // Spliting for most balanced groups
+        int totalFreq = 0;
+        for(int i = start; i <= end; i++)
+        {
+            totalFreq += chars[i].Frequency;
+        }
+        
+        int splitIndex = start;
+        int leftSum = 0;
+        int minDifference = int.MaxValue;
+        
+        // Testing different split points
+        for(int i = start; i < end; i++)
+        {
+            leftSum += chars[i].Frequency;
+            int rightSum = totalFreq - leftSum;
+            int difference = Math.Abs(leftSum - rightSum);
+            
+            if(difference < minDifference)
+            {
+                minDifference = difference;
+                splitIndex = i;
+            }
+        }
+        
+        for(int i = start; i <= splitIndex; i++)
+        {
+            chars[i].Code = currentCode + "0";
+        }
+        
+        for(int i=splitIndex+1; i<=end; i++)
+        {
+            chars[i].Code = currentCode + "1";
+        }
+        
+        Console.WriteLine($"Split: group [{start}-{splitIndex}] gets '0', group [{splitIndex + 1}-{end}] gets '1'");
+        
+        BuildShannonFanoCodes(chars, start, splitIndex, currentCode + "0");
+        BuildShannonFanoCodes(chars, splitIndex+1, end, currentCode + "1");
+    }
+    
+    // Encoding text 
+    static string EncodeText(string text, Dictionary<char, string> codes)
+    {
+        StringBuilder result = new StringBuilder();
+        foreach(char c in text)
+        {
+            result.Append(codes[c]);
+        }
+        return result.ToString();
+    }
+    
+    // Splitting decisions 
+    static void ShowSplittingProcess(List<CharData> charList)
+    {
+        Console.WriteLine("\nSplitting details:");
+        var sortedList = charList.OrderByDescending(x => x.Frequency).ToList();
+        
+        int totalFrequency = sortedList.Sum(x => x.Frequency);
+        Console.WriteLine($"Total frequency: {totalFrequency}");
+        
+        int cumulative = 0;
+        int splitPoint = -1;
+        int minDiff = int.MaxValue;
+        
+        for(int i=0; i<sortedList.Count; i++)
+        {
+            cumulative += sortedList[i].Frequency;
+            int remaining = totalFrequency - cumulative;
+            int difference = Math.Abs(cumulative - remaining);
+            
+            Console.WriteLine($"After '{sortedList[i].Character}': left={cumulative}, right={remaining}, diff={difference}");
+            
+            if(difference < minDiff)
+            {
+                minDiff = difference;
+                splitPoint = i;
+            }
+        }
+        
+        Console.WriteLine($"Best split: after position {splitPoint} (difference = {minDiff})");
+    }
+}
