@@ -1,0 +1,143 @@
+import random
+import time
+
+#My Selection Sort
+def my_sort(arr):
+    for i in range(len(arr)): 
+        minindex=i
+        for j in range(i+1, len(arr)):
+            if arr[j]<arr[minindex]: minindex=j
+        arr[i], arr[minindex]=arr[minindex], arr[i]
+    return arr
+
+
+arr = [random.randint(0, 9999) for _ in range(9999)]
+brr = [7,5,31,87,12,15,64,93,8,41,6]
+
+arr1 = arr.copy()
+start = time.time()
+my_sort(arr1)
+end = time.time()
+
+brr1 = brr.copy()
+startt = time.time()
+my_sort(brr1)
+endd = time.time()
+print(f"Selection Sort: {end-start:.5f} and {endd-startt:.5f} ")
+
+
+#Quick Sort (random pivot)
+def quick_sort(arr):
+    if len(arr)<=1: return arr
+    pivot=random.choice(arr)
+    down=[x for x in arr if x<pivot]
+    middle=[x for x in arr if x==pivot]
+    up=[x for x in arr if x>pivot]
+    return quick_sort(down)+middle+quick_sort(up)
+
+#Quick Sort (pivot - median of 3)
+def median3(a, b, c):
+    return sorted([a, b, c])[1]
+
+def quicksort_avg(arr):
+    if len(arr)<=1: return arr
+    pivot=median3(arr[0], arr[len(arr)//2], arr[-1])
+    down=[x for x in arr if x<pivot]
+    middle=[x for x in arr if x==pivot]
+    up=[x for x in arr if x>pivot]
+    return quicksort_avg(down)+middle+quicksort_avg(up)
+
+
+
+#Merge Sort
+def merge_sort(arr):
+    if len(arr)<=1: return arr
+    mid=len(arr)//2
+    left=merge_sort(arr[:mid])
+    right=merge_sort(arr[mid:])
+    
+    result = []
+    i=0
+    j=0
+    while i<len(left) and j<len(right):
+        if left[i]<right[j]:
+            result.append(left[i])
+            i+=1
+        else:
+            result.append(right[j])
+            j+=1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+
+#Heap Sort
+def heapify(arr, n, i):
+    largest=i
+    left=2*i+1
+    right=2*i+2
+    
+    if left<n and arr[left]>arr[largest]: largest=left
+    if right<n and arr[right]>arr[largest]: largest=right
+    
+    if largest!=i:
+        arr[i], arr[largest]=arr[largest], arr[i]
+        heapify(arr, n, largest)
+
+def heap_sort(arr):
+    n=len(arr)
+    for i in range(n//2-1, -1, -1): heapify(arr, n, i)
+    for i in range(n-1, 0, -1):
+        arr[i], arr[0]=arr[0], arr[i]
+        heapify(arr, i, 0)
+    return arr
+
+
+
+
+arr2 = arr.copy()
+start = time.time()
+quick_sort(arr2)
+end = time.time()
+
+brr2 = brr.copy()
+startt = time.time()
+quick_sort(brr2)
+endd = time.time()
+print(f"Quick Sort: {end-start:.5f} and {endd-startt:.5f} ")
+
+
+arr3 = arr.copy()
+start = time.time()
+quicksort_avg(arr3)
+end = time.time()
+
+brr3 = brr.copy()
+startt = time.time()
+quicksort_avg(brr3)
+endd = time.time()
+print(f"Quick Sort2: {end-start:.5f} and {endd-startt:.5f} ")
+
+
+arr4 = arr.copy()
+start = time.time()
+merge_sort(arr4)
+end = time.time()
+
+brr4 = brr.copy()
+startt = time.time()
+merge_sort(brr4)
+endd = time.time()
+print(f"Merge Sort: {end-start:.5f} and {endd-startt:.5f} ")
+
+
+arr5 = arr.copy()
+start = time.time()
+heap_sort(arr5)
+end = time.time()
+
+brr5 = brr.copy()
+startt = time.time()
+heap_sort(brr5)
+endd = time.time()
+print(f"Heap Sort: {end-start:.5f} and {endd-startt:.5f} ")

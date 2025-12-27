@@ -1,192 +1,441 @@
-import {useEffect, useMemo, useState} from 'react';
-import {
-    setInsert, setContains, setSuggest,
-    mapPut, mapGet, mapContains, mapKeys
-} from './api';
+import { useMemo, useState } from "react";
 
-function useDebounce(value, delay = 250) {
-    const [v, setV] = useState(value);
-    useEffect(() => { const id = setTimeout(() => setV(value), delay); return () => clearTimeout(id); }, [value, delay]);
-    return v;
+const API_BASE = "http://192.168.1.213:8080/api";
+
+function colorForCluster(clusterId) {
+    const palette = [
+        "#ef4444", "#3b82f6", "#22c55e", "#a855f7",
+        "#f97316", "#14b8a6", "#f59e0b", "#ec4899",
+        "#6366f1", "#10b981",
+    ];
+    if (clusterId == null || Number.isNaN(clusterId)) return "#9ca3af";
+    return palette[Math.abs(clusterId) % palette.length];
+}
+
+function normalizeVizResponse(data) {
+    if (!data) return { clusters: [], points: [] };
+    if (Array.isArray(data)) {
+        // legacy: points array
+        return { clusters: [], points: data };
+    }
+    return {
+        clusters: Array.isArray(data.clusters) ? data.clusters : [],
+        points: Array.isArray(data.points) ? data.points : [],
+    };
+}
+
+function Scatter2D({ data }) {
+    const { clusters, points } = useMemo(() => normalizeVizResponse(data), [data]);
+
+    if (!data) return <div className="placeholder">No visualization yet. Click "Load 2D".</div>;
+    if (!points.length) return <div className="placeholder">No points to visualize.</div>;
+
+    const xs = [];
+    const ys = [];
+
+    for (const p of points) {
+        if (typeof p.x === "number") xs.push(p.x);
+        if (typeof p.y === "number") ys.push(p.y);
+    }
+    for (const c of clusters) {
+        if (typeof c.x === "number") xs.push(c.x);
+        if (typeof c.y === "number") ys.push(c.y);
+    }
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    const W = 820; // viewBox width
+    const H = 420; // viewBox height
+    const P = 28;  // padding
+
+    // Map coordinate to SVG space
+    const sx = (v) => {
+        if (!Number.isFinite(minX) || !Number.isFinite(maxX) || minX === maxX) return W / 2;
+        return P + ((v - minX) / (maxX - minX)) * (W - 2 * P);
+    };
+    const sy = (v) => {
+        if (!Number.isFinite(minY) || !Number.isFinite(maxY) || minY === maxY) return H / 2;
+        // invert Y for SVG
+        return H - (P + ((v - minY) / (maxY - minY)) * (H - 2 * P));
+    };
+
+    const clusterIds = Array.from(new Set(points.map((p) => p.cluster))).sort((a, b) => a - b);
+
+    return (
+        <div>
+            <div className="viz-canvas">
+                <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%">
+                    {/* points */}
+                    {points.map((p) => (
+                        <circle
+                            key={`p-${p.index}`}
+                            cx={sx(p.x)}
+                            cy={sy(p.y)}
+                            r="4"
+                            fill={colorForCluster(p.clusterId)}
+                            opacity="0.75"
+                        >
+                            <title>{`#${p.index} | cluster ${p.clusterId}\n(${p.x?.toFixed?.(2)}, ${p.y?.toFixed?.(2)})`}</title>
+                        </circle>
+                    ))}
+
+                    {/* centroids */}
+                    {clusters.map((c) => (
+                        <rect
+                            key={`c-${c.clusterId}`}
+                            x={sx(c.x) - 6}
+                            y={sy(c.y) - 6}
+                            width="12"
+                            height="12"
+                            fill={colorForCluster(c.clusterId)}
+                            stroke="rgba(255,255,255,0.9)"
+                            strokeWidth="1"
+                            opacity="0.95"
+                        >
+                            <title>{`Centroid ${c.clusterId}\n(${c.x?.toFixed?.(2)}, ${c.y?.toFixed?.(2)})`}</title>
+                        </rect>
+                    ))}
+                </svg>
+            </div>
+
+            <div className="legend">
+                {clusterIds.map((id) => (
+                    <div key={id} className="legend-item">
+                        <span className="legend-dot" style={{ background: colorForCluster(id) }} />
+                        <span>Cluster {id}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function Table3D({ data }) {
+    const { points } = useMemo(() => normalizeVizResponse(data), [data]);
+
+    if (!data) return <div className="placeholder">No visualization yet. Click "Load 3D".</div>;
+    if (!points.length) return <div className="placeholder">No points to visualize.</div>;
+
+    return (
+        <div className="table3d-wrapper">
+            <table className="table3d">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>x</th>
+                    <th>y</th>
+                    <th>z</th>
+                    <th>cluster</th>
+                </tr>
+                </thead>
+                <tbody>
+                {points.slice(0, 120).map((p) => (
+                    <tr key={p.index}>
+                        <td>{p.index}</td>
+                        <td>{Number(p.x).toFixed(2)}</td>
+                        <td>{Number(p.y).toFixed(2)}</td>
+                        <td>{Number(p.z).toFixed(2)}</td>
+                        <td>
+                <span className="cluster-pill" style={{ background: colorForCluster(p.clusterId) }}>
+                  {p.clusterId}
+                </span>
+                        </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+
+            {points.length > 120 && (
+                <div className="placeholder" style={{ marginTop: 8 }}>
+                    Showing first 120 points of {points.length}.
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default function App() {
-    return (
-        <div style={styles.page}>
-            <div style={styles.container}>
-                <h1 style={{marginBottom: 8}}>Trie Demo</h1>
-                <div style={{opacity: .7, marginBottom: 16}}>
-                    Backend: Spring Boot • Frontend: React • TrieSet and TrieMap
-                </div>
-                <div style={styles.grid}>
-                    <TrieSetPanel/>
-                    <TrieMapPanel/>
-                </div>
-            </div>
-        </div>
-    );
-}
+    const [isInited, setIsInited] = useState(false);
+    const [initInfo, setInitInfo] = useState(null);
+    const [loadingInit, setLoadingInit] = useState(false);
 
-function TrieSetPanel() {
-    const [word, setWord] = useState('');
-    const [prefix, setPrefix] = useState('');
-    const debPrefix = useDebounce(prefix, 200);
+    const [semanticQuery, setSemanticQuery] = useState("");
+    const [semanticTopK, setSemanticTopK] = useState(10);
+    const [semanticResults, setSemanticResults] = useState([]);
+    const [searchLoading, setSearchLoading] = useState(false);
 
-    const [contains, setContainsState] = useState(null);
-    const [suggestions, setSuggestions] = useState([]);
-    const [k, setK] = useState(10);
-    const [loading, setLoading] = useState(false);
-    const canInsert = useMemo(() => word.trim().length > 0, [word]);
+    const [clusters, setClusters] = useState([]);
+    const [selectedCluster, setSelectedCluster] = useState(null);
+    const [clusterItems, setClusterItems] = useState([]);
+    const [clusterLoading, setClusterLoading] = useState(false);
 
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            setLoading(true);
-            try {
-                const [c, s] = await Promise.all([
-                    setContains(debPrefix),
-                    setSuggest(debPrefix, k),
-                ]);
-                if (!cancelled) { setContainsState(c); setSuggestions(s); }
-            } catch {
-                if (!cancelled) { setContainsState(null); setSuggestions([]); }
-            } finally {
-                if (!cancelled) setLoading(false);
+    const [vizMode, setVizMode] = useState("2d");
+    const [viz2D, setViz2D] = useState(null);
+    const [viz3D, setViz3D] = useState(null);
+    const [vizLoading, setVizLoading] = useState(false);
+
+    const [error, setError] = useState(null);
+
+    async function loadClusters() {
+        const res = await fetch(`${API_BASE}/clusters`);
+        if (!res.ok) throw new Error("Failed to load clusters");
+        const data = await res.json();
+
+        // Accept either: [0,1,2] or { clusters: [0,1,2] }
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.clusters)) return data.clusters;
+
+        console.warn("Unexpected /clusters response:", data);
+        return [];
+    }
+
+
+    async function handleInit() {
+        setError(null);
+        setLoadingInit(true);
+        setSelectedCluster(null);
+        setClusterItems([]);
+        setSemanticResults([]);
+        setViz2D(null);
+        setViz3D(null);
+
+        try {
+            const res = await fetch(`${API_BASE}/load-from-resources`, { method: "POST" });
+            if (!res.ok) throw new Error("Failed to init data");
+            const info = await res.json();
+
+            const cls = await loadClusters();
+
+            setInitInfo(info);
+            setClusters(cls);
+            setIsInited(true);
+        } catch (e) {
+            console.error(e);
+            setError(e.message || "Init error");
+        } finally {
+            setLoadingInit(false);
+        }
+    }
+
+    async function handleSearchSubmit(e) {
+        e.preventDefault();
+        if (!semanticQuery.trim()) {
+            setSemanticResults([]);
+            return;
+        }
+
+        setError(null);
+        setSearchLoading(true);
+
+        try {
+            const params = new URLSearchParams({
+                q: semanticQuery,
+                k: String(semanticTopK),
+            });
+
+            const res = await fetch(`${API_BASE}/search/semantic?${params}`);
+            if (!res.ok) throw new Error("Search failed");
+            const data = await res.json();
+
+            setSemanticResults(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error(e);
+            setError(e.message || "Search error");
+        } finally {
+            setSearchLoading(false);
+        }
+    }
+
+    async function handleClusterClick(clusterId) {
+        setSelectedCluster(clusterId);
+        setClusterItems([]);
+        setClusterLoading(true);
+        setError(null);
+
+        try {
+            const params = new URLSearchParams({
+                id: String(clusterId),
+                k: "30",
+            });
+
+            const res = await fetch(`${API_BASE}/search/by-cluster?${params}`);
+            if (!res.ok) throw new Error("Failed to load cluster items");
+            const data = await res.json();
+
+            setClusterItems(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error(e);
+            setError(e.message || "Cluster items error");
+        } finally {
+            setClusterLoading(false);
+        }
+    }
+
+    async function handleLoadViz(mode) {
+        setError(null);
+        setVizLoading(true);
+
+        try {
+            const endpoint = mode === "3d" ? "/visualize/3d" : "/visualize/2d";
+            const res = await fetch(`${API_BASE}${endpoint}`);
+            if (!res.ok) throw new Error("Failed to load visualization");
+            const data = await res.json();
+
+            if (mode === "3d") {
+                setViz3D(data);
+                setVizMode("3d");
+            } else {
+                setViz2D(data);
+                setVizMode("2d");
             }
-        })();
-        return () => { cancelled = true; };
-    }, [debPrefix, k]);
-
-    const onInsert = async () => {
-        await setInsert(word);
-        setWord('');
-        // обновим список
-        const s = await setSuggest(debPrefix, k);
-        setSuggestions(s);
-    };
+        } catch (e) {
+            console.error(e);
+            setError(e.message || "Visualization error");
+        } finally {
+            setVizLoading(false);
+        }
+    }
 
     return (
-        <div style={styles.card}>
-            <h2>TrieSet</h2>
+        <div className="app">
+            <div className="app-header">
+                <h1>Triemap Demo</h1>
 
-            <div style={styles.label}>Insert word</div>
-            <div style={styles.row}>
-                <input style={styles.input} placeholder="e.g., apple" value={word} onChange={e => setWord(e.target.value)} />
-                <button style={styles.btnPrimary} disabled={!canInsert} onClick={onInsert}>Insert</button>
+                <button className="init-button" onClick={handleInit} disabled={loadingInit}>
+                    {loadingInit ? "Loading..." : isInited ? "Re-load" : "Load data"}
+                </button>
+
+                {initInfo && (
+                    <div className="init-info">
+                        Items: <b>{initInfo.items}</b> · Clusters: <b>{initInfo.kClusters}</b>
+                    </div>
+                )}
             </div>
 
-            <div style={styles.label}>Prefix</div>
-            <div style={styles.row}>
-                <input style={styles.input} placeholder="e.g., app" value={prefix} onChange={e => setPrefix(e.target.value)} />
-                <select style={styles.select} value={k} onChange={e => setK(Number(e.target.value))}>
-                    {[5,10,20,50].map(n => <option key={n} value={n}>{n}</option>)}
-                </select>
-                <span style={{opacity:.7}}>{loading ? 'Loading…' : 'Ready'}</span>
-            </div>
+            {error && <div className="error-box">{error}</div>}
 
-            <div style={{marginTop: 10}}>
-                <div>Contains exact “{debPrefix}”: <b style={{color: contains ? '#10b981' : '#ef4444'}}>{String(!!contains)}</b></div>
-            </div>
+            <div className="main-grid">
+                {/* LEFT COLUMN */}
+                <div className="column">
+                    <h2 style={{ marginTop: 0 }}>Semantic search</h2>
 
-            <div style={{marginTop: 10}}>
-                <div style={styles.suggestBox}>
-                    {suggestions.length === 0 && <div style={{opacity:.6}}>No suggestions</div>}
-                    {suggestions.map((w, i) => (
-                        <button key={i} style={styles.chip} onClick={() => setPrefix(w)}>{w}</button>
-                    ))}
+                    <form className="search-form" onSubmit={handleSearchSubmit}>
+                        <input
+                            className="search-input"
+                            placeholder="Type a query..."
+                            value={semanticQuery}
+                            onChange={(e) => setSemanticQuery(e.target.value)}
+                        />
+
+                        <input
+                            className="search-input"
+                            style={{ width: 90 }}
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={semanticTopK}
+                            onChange={(e) => setSemanticTopK(Number(e.target.value) || 1)}
+                        />
+
+                        <button className="primary-button" type="submit" disabled={!isInited || searchLoading}>
+                            {searchLoading ? "Searching..." : "Search"}
+                        </button>
+                    </form>
+
+                    <div className="results-box">
+                        {!isInited && <div className="placeholder">Initialize data first.</div>}
+                        {isInited && semanticResults.length === 0 && !searchLoading && (
+                            <div className="placeholder">No results yet.</div>
+                        )}
+
+                        {semanticResults.map((r, idx) => (
+                            <div className="result-item" key={r.id ?? idx}>
+                                <div className="result-text">{r.text}</div>
+                                <div className="result-meta">
+                                    <span>cluster: {r.clusterId}</span>
+                                    {"similarity" in r ? <span>sim: {Number(r.similarity).toFixed(3)}</span> : <span />}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* RIGHT COLUMN */}
+                <div className="column">
+                    <div className="cluster-header">
+                        <h2 className="cluster-title">Clusters</h2>
+                        <button
+                            className="small-button"
+                            onClick={() => handleLoadViz("2d")}
+                            disabled={!isInited || vizLoading}
+                            title="Load 2D visualization"
+                        >
+                            {vizLoading && vizMode === "2d" ? "Loading..." : "Load 2D"}
+                        </button>
+                        <button
+                            className="small-button"
+                            onClick={() => handleLoadViz("3d")}
+                            disabled={!isInited || vizLoading}
+                            title="Load 3D visualization"
+                        >
+                            {vizLoading && vizMode === "3d" ? "Loading..." : "Load 3D"}
+                        </button>
+                    </div>
+
+                    <div className="cluster-list">
+                        {Array.isArray(clusters) && clusters.map((cid) => (
+                            <button
+                                key={cid}
+                                className={"cluster-button" + (selectedCluster === cid ? " active" : "")}
+                                onClick={() => handleClusterClick(cid)}
+                                disabled={!isInited}
+                            >
+                                Cluster {cid}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Visualization block */}
+                    <div style={{ marginBottom: 12 }}>
+                        <div className="viz-tabs">
+                            <button
+                                className={"viz-tab" + (vizMode === "2d" ? " active" : "")}
+                                onClick={() => setVizMode("2d")}
+                            >
+                                2D
+                            </button>
+                            <button
+                                className={"viz-tab" + (vizMode === "3d" ? " active" : "")}
+                                onClick={() => setVizMode("3d")}
+                            >
+                                3D
+                            </button>
+                        </div>
+
+                        {vizMode === "2d" ? <Scatter2D data={viz2D} /> : <Table3D data={viz3D} />}
+                    </div>
+
+                    <div className="results-box">
+                        {!selectedCluster && <div className="placeholder">Select a cluster to view items.</div>}
+                        {clusterLoading && <div className="placeholder">Loading cluster items...</div>}
+
+                        {!clusterLoading &&
+                            selectedCluster != null &&
+                            clusterItems.map((it, idx) => (
+                                <div className="result-item" key={it.id ?? idx}>
+                                    <div className="result-text">{it.text}</div>
+                                    <div className="result-meta">
+                                        <span>cluster: {it.clusterId}</span>
+                                        <span />
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
-
-function TrieMapPanel() {
-    const [key, setKey] = useState('');
-    const [value, setValue] = useState('');
-    const [prefix, setPrefix] = useState('');
-    const debPrefix = useDebounce(prefix, 200);
-
-    const [getResp, setGetResp] = useState(null);
-    const [containsResp, setContainsResp] = useState(null);
-    const [keys, setKeys] = useState([]);
-    const [k, setK] = useState(10);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            setLoading(true);
-            try {
-                const [g, c, ks] = await Promise.all([
-                    key ? mapGet(key) : Promise.resolve(null),
-                    key ? mapContains(key) : Promise.resolve({ok:null}),
-                    mapKeys(debPrefix, k),
-                ]);
-                if (!cancelled) { setGetResp(g); setContainsResp(c); setKeys(ks); }
-            } catch {
-                if (!cancelled) { setGetResp(null); setContainsResp({ok:null}); setKeys([]); }
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [key, debPrefix, k]);
-
-    const onPut = async () => {
-        await mapPut(key, value);
-        const g = await mapGet(key);
-        setGetResp(g);
-    };
-
-    return (
-        <div style={styles.card}>
-            <h2>TrieMap (key → value)</h2>
-
-            <div style={styles.label}>Put (key, value)</div>
-            <div style={styles.row}>
-                <input style={styles.input} placeholder="key (e.g., cat)" value={key} onChange={e => setKey(e.target.value)} />
-                <input style={styles.input} placeholder="value (e.g., animal)" value={value} onChange={e => setValue(e.target.value)} />
-                <button style={styles.btnPrimary} disabled={!key.trim()} onClick={onPut}>Put</button>
-            </div>
-
-            <div style={styles.row}>
-                <span style={{opacity:.7}}>{loading ? 'Loading…' : 'Ready'}</span>
-            </div>
-
-            <div style={{marginTop: 10}}>
-                <div>Contains “{key}”: <b style={{color: containsResp?.ok ? '#10b981' : '#ef4444'}}>{String(!!containsResp?.ok)}</b></div>
-                <div>Get: <code>{getResp ? JSON.stringify(getResp) : 'null'}</code></div>
-            </div>
-
-            <div style={{marginTop: 10}}>
-                <div style={styles.label}>Keys with prefix</div>
-                <div style={styles.row}>
-                    <input style={styles.input} placeholder="prefix (e.g., ca)" value={prefix} onChange={e => setPrefix(e.target.value)} />
-                    <select style={styles.select} value={k} onChange={e => setK(Number(e.target.value))}>
-                        {[5,10,20,50].map(n => <option key={n} value={n}>{n}</option>)}
-                    </select>
-                </div>
-                <div style={styles.suggestBox}>
-                    {keys.length === 0 && <div style={{opacity:.6}}>No keys</div>}
-                    {keys.map((w, i) => (
-                        <button key={i} style={styles.chip} onClick={() => setKey(w)}>{w}</button>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-const styles = {
-    page: {minHeight:'100dvh', background:'#0b1220', color:'#e5e7eb', display:'flex', alignItems:'flex-start', justifyContent:'center', padding:24},
-    container: {width:980, maxWidth:'100%', display:'flex', flexDirection:'column'},
-    grid: {display:'grid', gridTemplateColumns:'1fr 1fr', gap:16},
-    card: {background:'#0f172a', border:'1px solid #1f2937', borderRadius:14, padding:16, boxShadow:'0 8px 24px rgba(0,0,0,.25)'},
-    row: {display:'flex', gap:8, alignItems:'center', marginTop:8},
-    input: {flex:1, padding:'10px 12px', borderRadius:8, border:'1px solid #334155', background:'#111827', color:'#e5e7eb'},
-    select: {padding:'10px 12px', borderRadius:8, border:'1px solid #334155', background:'#111827', color:'#e5e7eb'},
-    btnPrimary: {padding:'10px 14px', borderRadius:8, border:'1px solid #0ea5e9', background:'#0ea5e933', color:'#e5e7eb', cursor:'pointer'},
-    suggestBox: {display:'flex', gap:8, flexWrap:'wrap', minHeight:40, border:'1px dashed #334155', borderRadius:10, padding:10, marginTop:6},
-    chip: {padding:'6px 10px', borderRadius:999, border:'1px solid #334155', background:'#111827', color:'#e5e7eb', cursor:'pointer'},
-    label: {marginTop:8, fontSize:12, opacity:.8}
-};

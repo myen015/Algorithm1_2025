@@ -1,0 +1,14 @@
+Output:
+=== C++ Big Integer Tests ===
+
+123 + 456 = 579
+123 * 456 = 56088
+123 // 3 = 1100 remainder 0
+
+=== C++ Benchmark for 100-digit numbers (100 runs each) ===
+
+Operation | Time (ms)
+----------|----------
+Add       | 0.04068
+Sub       | 0.01809
+Mul       | 0.04757
